@@ -58,7 +58,7 @@ function ServiceCard({ item, number, active, onPick }: { item: Service; number: 
     <article className={`service-card ${active ? 'service-card-active' : ''} ${open ? 'service-card-open' : ''}`}>
       <div className="service-card-heading">
         <button type="button" className="service-card-toggle" aria-expanded={open} aria-controls={`service-details-${item.id}`} onClick={() => setOpen((value) => !value)}>
-          {details && <Image src={details.image} alt={details.alt} width={88} height={88} className="service-card-photo" sizes="88px" />}
+          {details ? <Image src={details.image} alt={details.alt} width={88} height={88} className="service-card-photo" sizes="88px" /> : <span className="service-card-placeholder" aria-hidden="true"><Gem size={22} /></span>}
           <span className="service-card-title"><small className="service-card-number">{number}</small><strong className="serif">{item.name}</strong><small className="service-card-price">{priceBRL(item.price)}</small></span>
           <span className="service-toggle-icon" aria-hidden="true">{open ? <Minus size={18} /> : <Plus size={18} />}</span>
         </button>
