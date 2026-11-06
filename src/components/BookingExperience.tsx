@@ -5,9 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowDownRight, ArrowLeft, ArrowRight, CalendarDays, Check, CheckCircle2, Clock3, Gem, LockKeyhole, Mail, MapPin, Minus, Plus, ShieldCheck } from 'lucide-react';
 import {
-  availableTimes, BOOKING_CHANGE_EVENT, SETTINGS_CHANGE_EVENT, Booking, dateLabel, datesAvailable, isoDay,
-  loadBookings, loadSettings, priceBRL, saveBookings, Service, StudioSettings, DEFAULT_SETTINGS, timeSummary,
+  availableTimes, Booking, dateLabel, datesAvailable, isoDay,
+  priceBRL, Service, StudioSettings, DEFAULT_SETTINGS, timeSummary,
 } from '@/lib/booking';
+import { createPublicBooking, fetchPublicBusyBookings, fetchPublicStudioSettings, getSupabaseBrowserClient } from '@/lib/supabase-browser';
 
 const weekday = (day: Date) => day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
 const monthName = (day: Date) => day.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
@@ -72,26 +73,42 @@ function ServiceCard({ item, active, onPick }: { item: Service; active: boolean;
 
 export function BookingExperience() {
   const [settings, setSettings] = useState<StudioSettings>(DEFAULT_SETTINGS);
+  const [settingsReady, setSettingsReady] = useState(false);
   const days = useMemo(() => datesAvailable(settings), [settings]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [busyLoading, setBusyLoading] = useState(false);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [completed, setCompleted] = useState<Booking | null>(null);
   const [error, setError] = useState('');
   const [bookingHelpOpen, setBookingHelpOpen] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
 
   useEffect(() => {
-    const refresh = () => { setBookings(loadBookings()); setSettings(loadSettings()); };
-    refresh();
-    window.addEventListener(BOOKING_CHANGE_EVENT, refresh);
-    window.addEventListener(SETTINGS_CHANGE_EVENT, refresh);
-    window.addEventListener('storage', refresh);
-    return () => { window.removeEventListener(BOOKING_CHANGE_EVENT, refresh); window.removeEventListener(SETTINGS_CHANGE_EVENT, refresh); window.removeEventListener('storage', refresh); };
+    let mounted = true;
+    fetchPublicStudioSettings()
+      .then((nextSettings) => { if (mounted) { setSettings(nextSettings); setSettingsReady(true); setConnectionError(''); } })
+      .catch(() => { if (mounted) { setSettingsReady(true); setConnectionError('Não foi possível carregar os serviços agora. Tente novamente em instantes.'); } });
+    return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (!date || !getSupabaseBrowserClient()) return;
+    let mounted = true;
+    setBusyLoading(true);
+    const refreshBusySlots = () => fetchPublicBusyBookings(date)
+      .then((items) => { if (mounted) { setBookings(items); setConnectionError(''); } })
+      .catch(() => { if (mounted) setConnectionError('Não foi possível atualizar os horários. Tente novamente.'); })
+      .finally(() => { if (mounted) setBusyLoading(false); });
+    void refreshBusySlots();
+    const refreshTimer = window.setInterval(refreshBusySlots, 12000);
+    return () => { mounted = false; window.clearInterval(refreshTimer); };
+  }, [date]);
 
   useEffect(() => {
     if (!date || !days.some((day) => isoDay(day) === date)) {
@@ -104,35 +121,41 @@ export function BookingExperience() {
   const service = services.find((item) => item.id === serviceId) ?? null;
   const available = useMemo(() => service && date ? availableTimes(service, date, bookings, settings) : [], [service, date, bookings, settings]);
 
-  function submitBooking(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (time && !available.includes(time)) setTime(null);
+  }, [time, available]);
+
+  async function submitBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
     if (!service || !date || !time || service.durationMinutes === null) { setError('Selecione um serviço com duração definida, data e horário.'); return; }
     if (name.trim().length < 3) { setError('Informe seu nome completo.'); return; }
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setError('Informe um e-mail válido.'); return; }
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10 || cleanPhone.length > 11) { setError('Informe um número de WhatsApp válido com DDD.'); return; }
-    const fresh = loadBookings();
-    const liveSettings = loadSettings();
-    const liveService = liveSettings.services.find((item) => item.id === service.id && item.active);
-    if (!liveService || liveService.durationMinutes === null || !availableTimes(liveService, date, fresh, liveSettings).includes(time)) {
-      setBookings(fresh);
+    try {
+      const booking = await createPublicBooking({
+        serviceId: service.id, date, time, name: name.trim(), email: cleanEmail,
+        phone: cleanPhone, notes: notes.trim().slice(0, 280),
+      });
+      setConnectionError('');
+      setCompleted(booking);
+      const occupied = await fetchPublicBusyBookings(date);
+      setBookings(occupied);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : '';
       setTime(null);
-      setError('Esse horário acabou de ficar indisponível. Escolha outro.');
-      return;
+      setError(message.includes('indisponível') || message.includes('23P01')
+        ? 'Esse horário acabou de ficar indisponível. Escolha outro.'
+        : 'Não foi possível salvar seu agendamento. Confira os dados e tente novamente.');
+      fetchPublicBusyBookings(date).then(setBookings).catch(() => undefined);
     }
-    const booking: Booking = {
-      id: `demo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      serviceId: service.id, date, time, name: name.trim(), phone: cleanPhone,
-      notes: notes.trim().slice(0, 280), status: 'pendente', createdAt: new Date().toISOString(),
-      serviceName: liveService.name, durationMinutes: liveService.durationMinutes, price: liveService.price,
-    };
-    saveBookings([...fresh, booking]);
-    setCompleted(booking);
   }
 
   return (
     <div className="site-shell">
-      <div className="demo-line">PROTÓTIPO — DADOS LOCAIS DE TESTE · SEM PAGAMENTO REAL</div>
+      <div className="demo-line">AGENDE NO SEU TEMPO · CONFIRMAÇÃO PELO PAINEL DA ALANA</div>
       <header className="site-header">
         <div className="container header-inner">
           <Brand />
@@ -210,7 +233,7 @@ export function BookingExperience() {
           <div className="container">
             <div className="section-header">
               <div><p className="eyebrow">01 · NOSSOS CUIDADOS</p><h2 className="serif section-title">Beleza que se <em>sente.</em></h2></div>
-              <p className="section-description">Escolha o cuidado que combina com você. Catálogo de demonstração configurável no painel administrativo.</p>
+              <p className="section-description">Escolha o cuidado que combina com você e veja os horários disponíveis.</p>
             </div>
             <div className="service-grid">
               {services.map((item) => <ServiceCard key={item.id} item={item} active={serviceId === item.id} onPick={() => { setServiceId(item.id); setTime(null); document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' }); }} />)}
@@ -243,7 +266,7 @@ export function BookingExperience() {
 
         <section className="section booking-section" id="agendar">
           <div className="container">
-            <div className="booking-heading"><p className="eyebrow">03 · AGENDE SUA VISITA</p><h2 className="serif section-title">Seu próximo momento <em>especial.</em></h2><p>Faça uma solicitação de teste para conhecer como funcionará a agenda.</p></div>
+            <div className="booking-heading"><p className="eyebrow">03 · AGENDE SUA VISITA</p><h2 className="serif section-title">Seu próximo momento <em>especial.</em></h2><p>Escolha o serviço, o horário e deixe seus dados para a Alana confirmar.</p></div>
             <div className={`booking-help ${bookingHelpOpen ? 'booking-help-open' : ''}`}>
               <button type="button" className="booking-help-trigger" aria-expanded={bookingHelpOpen} aria-controls="booking-help-content" onClick={() => setBookingHelpOpen((open) => !open)}>
                 <span><strong>Primeira vez agendando?</strong><small>Toque para ver como funciona</small></span>
@@ -267,10 +290,10 @@ export function BookingExperience() {
                     <div className="success-icon"><CheckCircle2 size={38} /></div>
                     <p className="eyebrow">SOLICITAÇÃO DE TESTE</p>
                     <h3 className="serif">Tudo pronto, {completed.name.split(' ')[0]}!</h3>
-                    <p>Seu agendamento de demonstração foi registrado apenas neste navegador.</p>
-                    <div className="success-summary"><span>Serviço: <strong>{completed.serviceName ?? settings.services.find((s) => s.id === completed.serviceId)?.name}</strong></span><span>Data: <strong>{dateLabel(completed.date)} às {completed.time}</strong></span><span>Situação: <strong>Aguardando confirmação no painel demo</strong></span></div>
-                    <p className="demo-note"><LockKeyhole size={15} /> Nenhum pagamento ou mensagem foi enviado.</p>
-                    <button type="button" className="button button-dark" onClick={() => {setCompleted(null); setName(''); setPhone(''); setNotes(''); setTime(null);}}>Novo teste <ArrowRight size={16}/></button>
+                    <p>Seu pedido foi salvo. A Alana vai confirmar o horário.</p>
+                    <div className="success-summary"><span>Serviço: <strong>{completed.serviceName ?? settings.services.find((s) => s.id === completed.serviceId)?.name}</strong></span><span>Data: <strong>{dateLabel(completed.date)} às {completed.time}</strong></span><span>Situação: <strong>Aguardando confirmação</strong></span></div>
+                    <p className="demo-note"><LockKeyhole size={15} /> A confirmação será feita diretamente pela Alana.</p>
+                    <button type="button" className="button button-dark" onClick={() => {setCompleted(null); setName(''); setEmail(''); setPhone(''); setNotes(''); setTime(null);}}>Fazer outro agendamento <ArrowRight size={16}/></button>
                   </div>
                 ) : (
                   <form onSubmit={submitBooking}>
@@ -279,23 +302,25 @@ export function BookingExperience() {
                       {services.map((item) => <button key={item.id} type="button" className={`service-select ${serviceId === item.id ? 'picked' : ''}`} onClick={() => { setServiceId(item.id); setTime(null); }}><span className="radio-dot" /><span className="service-select-body"><strong>{item.name}</strong><small>{item.durationMinutes === null ? 'Tempo a confirmar' : `${timeSummary(item.durationMinutes)} de atendimento`}</small></span><b>{priceBRL(item.price)}</b></button>)}
                     </div>
                     <div className="form-divider" />
-                    <div className="form-section-heading"><span className="step-index">02</span><div><h3>Data e horário</h3><p>Horários exibidos conforme as configurações do painel de teste.</p></div></div>
-                    <div className="date-scroller" role="group" aria-label="Selecione o dia">
+                    <div className="form-section-heading"><span className="step-index">02</span><div><h3>Data e horário</h3><p>Os horários ocupados deixam de aparecer para as próximas clientes.</p></div></div>
+                    {!settingsReady ? <p className="empty-slots">Carregando agenda...</p> : days.length === 0 ? <p className="empty-slots">A agenda ainda está sendo configurada. Tente novamente mais tarde.</p> : <div className="date-scroller" role="group" aria-label="Selecione o dia">
                       {days.map((day) => { const key = isoDay(day); return <button key={key} type="button" className={`day-tile ${date === key ? 'active' : ''}`} onClick={() => { setDate(key); setTime(null); }}><small>{weekday(day)}</small><strong>{day.getDate()}</strong><small>{monthName(day)}</small></button>; })}
-                    </div>
+                    </div>}
                     <div className="time-label"><Clock3 size={15}/><span>Horários disponíveis</span></div>
-                    {!service ? <p className="empty-slots">Escolha um serviço para visualizar os horários.</p> : service.durationMinutes === null ? <p className="empty-slots">A duração deste atendimento será confirmada antes de liberar os horários.</p> : available.length === 0 ? <p className="empty-slots">Sem horários para este dia. Escolha outra data.</p> : <div className="times-grid">{available.map((slot) => <button key={slot} type="button" className={`time-pill ${time === slot ? 'active' : ''}`} onClick={() => setTime(slot)}>{slot}</button>)}</div>}
+                    {!service ? <p className="empty-slots">Escolha um serviço para visualizar os horários.</p> : service.durationMinutes === null ? <p className="empty-slots">A duração deste atendimento será confirmada antes de liberar os horários.</p> : busyLoading ? <p className="empty-slots">Atualizando horários...</p> : available.length === 0 ? <p className="empty-slots">Sem horários para este dia. Escolha outra data.</p> : <div className="times-grid">{available.map((slot) => <button key={slot} type="button" className={`time-pill ${time === slot ? 'active' : ''}`} onClick={() => setTime(slot)}>{slot}</button>)}</div>}
+                    {connectionError && <p className="form-error" role="status">{connectionError}</p>}
                     <div className="form-divider" />
-                    <div className="form-section-heading"><span className="step-index">03</span><div><h3>Seus dados</h3><p>Informe seus dados para o teste.</p></div></div>
+                    <div className="form-section-heading"><span className="step-index">03</span><div><h3>Seus dados</h3><p>Precisamos deles para identificar e confirmar seu horário.</p></div></div>
                     <div className="fields-grid"><label className="field">Nome completo<input required type="text" autoComplete="name" placeholder="Seu nome" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label><label className="field">WhatsApp com DDD<input required type="tel" autoComplete="tel" inputMode="tel" placeholder="(24) 99999-9999" value={phone} maxLength={20} onChange={(e) => setPhone(e.target.value)} /></label></div>
+                    <label className="field">E-mail<input required type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com" value={email} maxLength={254} onChange={(e) => setEmail(e.target.value)} /></label>
                     <label className="field notes-field">Observações (opcional)<textarea placeholder="Alguma preferência?" value={notes} maxLength={280} rows={3} onChange={(e) => setNotes(e.target.value)} /></label>
                     {error && <p className="form-error" role="alert">{error}</p>}
-                    <button type="submit" className="button button-dark submit-button" disabled={!service || !date || !time}>Solicitar agendamento de teste <ArrowRight size={18}/></button>
-                    <div className="payment-teaser"><ShieldCheck size={17}/><span>Sinal por Pix previsto para a versão integrada; nada é cobrado aqui.</span></div>
+                    <button type="submit" className="button button-dark submit-button" disabled={!service || !date || !time}>Solicitar agendamento <ArrowRight size={18}/></button>
+                    <div className="payment-teaser"><ShieldCheck size={17}/><span>Seu horário fica reservado e aguarda a confirmação da Alana.</span></div>
                   </form>
                 )}
               </div>
-              <aside className="booking-aside"><p className="eyebrow">SUA ESCOLHA</p><h3 className="serif">Um cuidado <br/><em>exclusivo.</em></h3><div className="aside-rule" /><div className="aside-detail"><span>Serviço</span><strong>{service?.name ?? 'Escolha seu serviço'}</strong></div><div className="aside-detail"><span>Data</span><strong>{date ? dateLabel(date) : 'Selecione uma data'}</strong></div><div className="aside-detail"><span>Horário</span><strong>{time ?? 'Selecione um horário'}</strong></div><div className="aside-detail"><span>Valor demonstrativo</span><strong>{service ? priceBRL(service.price) : '—'}</strong></div><div className="aside-detail"><span>Sinal previsto ({settings.depositPercent}%)</span><strong>{service ? priceBRL(service.price * settings.depositPercent / 100) : '—'}</strong></div><div className="aside-rule" /><div className="aside-signature serif">Alana Nails</div><p className="aside-reminder">Cada detalhe da sua experiência importa.</p><span className="aside-sparkle">✧</span></aside>
+              <aside className="booking-aside"><p className="eyebrow">SUA ESCOLHA</p><h3 className="serif">Um cuidado <br/><em>exclusivo.</em></h3><div className="aside-rule" /><div className="aside-detail"><span>Serviço</span><strong>{service?.name ?? 'Escolha seu serviço'}</strong></div><div className="aside-detail"><span>Data</span><strong>{date ? dateLabel(date) : 'Selecione uma data'}</strong></div><div className="aside-detail"><span>Horário</span><strong>{time ?? 'Selecione um horário'}</strong></div><div className="aside-detail"><span>Valor</span><strong>{service ? priceBRL(service.price) : '—'}</strong></div><div className="aside-detail"><span>Sinal previsto ({settings.depositPercent}%)</span><strong>{service ? priceBRL(service.price * settings.depositPercent / 100) : '—'}</strong></div><div className="aside-rule" /><div className="aside-signature serif">Alana Nails</div><p className="aside-reminder">Cada detalhe da sua experiência importa.</p><span className="aside-sparkle">✧</span></aside>
             </div>
           </div>
         </section>
@@ -306,7 +331,7 @@ export function BookingExperience() {
           <Brand inverse />
           <div className="footer-location"><p>LOCAL DE ATENDIMENTO</p><strong><MapPin size={17} /> Quatis, RJ</strong></div>
           <p>Alana Nails · Protótipo de agendamento.<br />Ainda não disponível para reservas reais.</p>
-          <div className="footer-links"><Link href="/admin">Painel demo <ArrowRight size={14}/></Link><a href="#agendar">Voltar para agendar <ArrowLeft size={14}/></a></div>
+          <div className="footer-links"><Link href="/admin">Painel da Alana <ArrowRight size={14}/></Link><a href="#agendar">Voltar para agendar <ArrowLeft size={14}/></a></div>
         </div>
         <div className="container footer-bottom"><span>© Alana Nails</span><span>Site desenvolvido por <a href="https://github.com/devL777" target="_blank" rel="noreferrer">devL777</a></span></div>
       </footer>

@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { CalendarOff, CheckCircle2, Clock3, Plus, Save, ShieldAlert, Trash2 } from 'lucide-react';
 import {
-  loadBookings, loadSettings, priceBRL, saveSettings,
+  priceBRL,
   Service, StudioSettings, validateSettings,
 } from '@/lib/booking';
+import { fetchAdminBookings, fetchAdminStudioSettings, saveAdminStudioSettings } from '@/lib/supabase-browser';
 
 const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
@@ -14,8 +15,11 @@ export function StudioSettingsEditor() {
   const [blockedInput, setBlockedInput] = useState('');
   const [notice, setNotice] = useState('');
   const [problem, setProblem] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setDraft(loadSettings()); }, []);
+  useEffect(() => {
+    fetchAdminStudioSettings().then(setDraft).catch(() => setProblem('Não foi possível carregar as configurações do banco.'));
+  }, []);
 
   function mutate(update: (old: StudioSettings) => StudioSettings) {
     setDraft((old) => old ? update(old) : old);
@@ -37,12 +41,17 @@ export function StudioSettingsEditor() {
     }));
   }
 
-  function removeService(id: string) {
-    if (loadBookings().some((booking) => booking.serviceId === id)) {
-      setProblem('Este serviço já possui testes de agendamento. Desative-o em vez de excluí-lo.');
-      return;
+  async function removeService(id: string) {
+    try {
+      const bookings = await fetchAdminBookings();
+      if (bookings.some((booking) => booking.serviceId === id)) {
+        setProblem('Este serviço já possui agendamentos. Desative-o em vez de excluí-lo.');
+        return;
+      }
+      mutate((current) => ({ ...current, services: current.services.filter((item) => item.id !== id) }));
+    } catch {
+      setProblem('Não foi possível conferir os agendamentos deste serviço.');
     }
-    mutate((current) => ({ ...current, services: current.services.filter((item) => item.id !== id) }));
   }
 
   function editWeekday(index: number, field: 'enabled' | 'start' | 'end' | 'breakStart' | 'breakEnd', value: string | boolean) {
@@ -60,23 +69,29 @@ export function StudioSettingsEditor() {
     setBlockedInput('');
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!draft) return;
     const issue = validateSettings(draft);
     if (issue) { setProblem(issue); setNotice(''); return; }
-    saveSettings(draft);
-    setProblem('');
-    setNotice('Configurações salvas neste navegador. Abra o site público em outra aba do mesmo navegador para testar.');
+    setSaving(true);
+    try {
+      await saveAdminStudioSettings(draft);
+      setProblem('');
+      setNotice('Configurações salvas. A agenda pública já pode usar esses horários.');
+    } catch {
+      setProblem('Não foi possível salvar as configurações. Confira os dados e tente novamente.');
+      setNotice('');
+    } finally { setSaving(false); }
   }
 
-  if (!draft) return <div className="settings-panel">Carregando configurações demonstrativas...</div>;
+  if (!draft) return <div className="settings-panel">{problem || 'Carregando configurações...'}</div>;
 
   return (
     <div className="settings-workspace">
       <div className="admin-heading">
         <div><p className="eyebrow">PERSONALIZE O ATENDIMENTO</p><h1 className="serif">Seu estúdio, <em>suas regras.</em></h1><p>Configure o catálogo, a agenda e o sinal ilustrativo sem editar o código.</p></div>
       </div>
-      <div className="settings-intro"><ShieldAlert size={18}/><span>Dados locais e fictícios: não use valores ou contatos de clientes reais. Alterações não são sincronizadas com outros celulares.</span></div>
+      <div className="settings-intro"><ShieldAlert size={18}/><span>Serviços, horários e datas bloqueadas são salvos no banco e atualizados para todas as clientes.</span></div>
       <section className="settings-panel">
         <div className="settings-panel-heading"><div><p className="eyebrow">01 · CATÁLOGO</p><h2 className="serif">Serviços & valores</h2><p>Somente serviços marcados como ativos aparecem no agendamento.</p></div><button className="settings-add" type="button" onClick={addService}><Plus size={16}/> Novo serviço</button></div>
         <div className="service-editor-list">
@@ -113,7 +128,7 @@ export function StudioSettingsEditor() {
       <section className="settings-panel settings-payment"><div className="settings-panel-heading"><div><p className="eyebrow">04 · PREPARAÇÃO DE PAGAMENTO</p><h2 className="serif">Sinal de reserva</h2><p>Prévia do valor que poderá ser cobrado no Pix após a integração.</p></div></div><div className="deposit-config"><label>Percentual do sinal<input type="number" min="0" max="100" step="1" value={draft.depositPercent} onChange={(event) => mutate((old) => ({ ...old, depositPercent: Number(event.target.value) }))}/></label><div><small>Exemplo para um atendimento de R$ 100,00</small><strong>{priceBRL(100 * draft.depositPercent / 100)}</strong></div></div><p className="settings-hint">Nenhuma cobrança será realizada. A conexão com Mercado Pago e a confirmação por webhook serão etapas separadas.</p></section>
       <div className="settings-savebar">
         <div aria-live="polite">{problem ? <p className="settings-error">{problem}</p> : notice ? <p className="settings-success"><CheckCircle2 size={17}/>{notice}</p> : <p>Revise os dados e salve para atualizar a demonstração.</p>}</div>
-        <button type="button" className="button button-dark" onClick={handleSave}><Save size={17}/> Salvar alterações</button>
+        <button type="button" className="button button-dark" onClick={handleSave} disabled={saving}><Save size={17}/> {saving ? 'Salvando...' : 'Salvar alterações'}</button>
       </div>
     </div>
   );
