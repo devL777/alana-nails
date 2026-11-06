@@ -127,7 +127,7 @@ export function StudioSettingsEditor() {
       </section>
       <section className="settings-panel settings-payment"><div className="settings-panel-heading"><div><p className="eyebrow">04 · PREPARAÇÃO DE PAGAMENTO</p><h2 className="serif">Sinal de reserva</h2><p>Prévia do valor que poderá ser cobrado no Pix após a integração.</p></div></div><div className="deposit-config"><label>Percentual do sinal<input type="number" min="0" max="100" step="1" value={draft.depositPercent} onChange={(event) => mutate((old) => ({ ...old, depositPercent: Number(event.target.value) }))}/></label><div><small>Exemplo para um atendimento de R$ 100,00</small><strong>{priceBRL(100 * draft.depositPercent / 100)}</strong></div></div><p className="settings-hint">Nenhuma cobrança será realizada. A conexão com Mercado Pago e a confirmação por webhook serão etapas separadas.</p></section>
       <div className="settings-savebar">
-        <div aria-live="polite">{problem ? <p className="settings-error">{problem}</p> : notice ? <p className="settings-success"><CheckCircle2 size={17}/>{notice}</p> : <p>Revise os dados e salve para atualizar a demonstração.</p>}</div>
+        <div aria-live="polite">{problem ? <p className="settings-error">{problem}</p> : notice ? <p className="settings-success"><CheckCircle2 size={17}/>{notice}</p> : <p>Revise os dados e salve para atualizar a agenda.</p>}</div>
         <button type="button" className="button button-dark" onClick={handleSave} disabled={saving}><Save size={17}/> {saving ? 'Salvando...' : 'Salvar alterações'}</button>
       </div>
     </div>

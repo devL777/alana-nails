@@ -330,7 +330,7 @@ export function BookingExperience() {
         <div className="container footer-inner">
           <Brand inverse />
           <div className="footer-location"><p>LOCAL DE ATENDIMENTO</p><strong><MapPin size={17} /> Quatis, RJ</strong></div>
-          <p>Alana Nails · Protótipo de agendamento.<br />Ainda não disponível para reservas reais.</p>
+          <p>Alana Nails · Agendamentos sujeitos à confirmação.<br />Atendimento em Quatis, RJ.</p>
           <div className="footer-links"><Link href="/admin">Painel da Alana <ArrowRight size={14}/></Link><a href="#agendar">Voltar para agendar <ArrowLeft size={14}/></a></div>
         </div>
         <div className="container footer-bottom"><span>© Alana Nails</span><span>Site desenvolvido por <a href="https://github.com/devL777" target="_blank" rel="noreferrer">devL777</a></span></div>

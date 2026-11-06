@@ -18,7 +18,7 @@ const interfaceFont = Manrope({
 
 export const metadata: Metadata = {
   title: 'Alana Nails | Beleza em cada detalhe',
-  description: 'Agendamento de cuidados para as unhas. Projeto demonstrativo.',
+  description: 'Conheça os serviços de Alana Nails e solicite seu horário em Quatis, RJ.',
   applicationName: 'Alana Nails',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'Alana Nails', statusBarStyle: 'black-translucent' },

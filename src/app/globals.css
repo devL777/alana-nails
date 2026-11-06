@@ -276,6 +276,7 @@ a { color: inherit; text-decoration: none; }
 .admin-login-card > p:not(.eyebrow) { margin: 0 0 22px; color: #786d61; font-size: 12px; line-height: 1.7; }
 .admin-login-form { display: grid; gap: 16px; }
 .admin-login-form .button { width: 100%; margin-top: 5px; }
+.admin-login-card .settings-error, .admin-content > .settings-error { margin: 0; color: #a23636; font-size: 12px; line-height: 1.6; }
 .admin-login-back { margin-top: 25px; display: inline-flex; align-items: center; gap: 8px; color: #786d61; font-size: 11px; }
 .admin-login-back:hover { color: #3e3429; }
 .admin-mobile-brand { display: none; }
