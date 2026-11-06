@@ -41,8 +41,8 @@ export async function fetchPublicStudioSettings(): Promise<StudioSettings> {
       enabled: Boolean(row?.enabled),
       start: row?.opens_at?.slice(0, 5) ?? '09:00',
       end: row?.closes_at?.slice(0, 5) ?? '18:00',
-      breakStart: row?.break_starts_at?.slice(0, 5) ?? '12:00',
-      breakEnd: row?.break_ends_at?.slice(0, 5) ?? '13:00',
+      breakStart: row?.break_starts_at?.slice(0, 5) ?? row?.break_ends_at?.slice(0, 5) ?? '12:00',
+      breakEnd: row?.break_ends_at?.slice(0, 5) ?? row?.break_starts_at?.slice(0, 5) ?? '12:00',
     };
   });
   return {
@@ -126,7 +126,7 @@ export async function fetchAdminStudioSettings(): Promise<StudioSettings> {
   for (const result of [servicesResult, hoursResult, blockedResult, settingsResult]) if (result.error) throw result.error;
   const weekly = Array.from({ length: 7 }, (_, index) => {
     const row = hoursResult.data?.find((item) => item.weekday === index);
-    return { enabled: Boolean(row?.enabled), start: row?.opens_at?.slice(0, 5) ?? '09:00', end: row?.closes_at?.slice(0, 5) ?? '18:00', breakStart: row?.break_starts_at?.slice(0, 5) ?? '12:00', breakEnd: row?.break_ends_at?.slice(0, 5) ?? '13:00' };
+    return { enabled: Boolean(row?.enabled), start: row?.opens_at?.slice(0, 5) ?? '09:00', end: row?.closes_at?.slice(0, 5) ?? '18:00', breakStart: row?.break_starts_at?.slice(0, 5) ?? row?.break_ends_at?.slice(0, 5) ?? '12:00', breakEnd: row?.break_ends_at?.slice(0, 5) ?? row?.break_starts_at?.slice(0, 5) ?? '12:00' };
   });
   return {
     services: (servicesResult.data as DbService[] | null ?? []).map((item) => ({ id: item.id, name: item.name, detail: item.detail, durationMinutes: item.duration_minutes, price: Number(item.price), symbol: item.symbol, active: item.active })),
