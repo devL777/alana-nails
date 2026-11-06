@@ -55,7 +55,7 @@ function ServiceCard({ item, number, active, onPick }: { item: Service; number: 
   const details = serviceDetails[item.id];
 
   return (
-    <article className={`service-card ${active ? 'service-card-active' : ''} ${open ? 'service-card-open' : ''}`}>
+    <article data-reveal className={`service-card ${active ? 'service-card-active' : ''} ${open ? 'service-card-open' : ''}`}>
       <div className="service-card-heading">
         <button type="button" className="service-card-toggle" aria-expanded={open} aria-controls={`service-details-${item.id}`} onClick={() => setOpen((value) => !value)}>
           {details ? <Image src={details.image} alt={details.alt} width={88} height={88} className="service-card-photo" sizes="88px" /> : <span className="service-card-placeholder" aria-hidden="true"><Gem size={22} /></span>}
@@ -214,28 +214,28 @@ export function BookingExperience() {
 
         <section className="section portfolio-section" id="trabalhos" aria-labelledby="portfolio-title">
           <div className="container">
-            <div className="portfolio-heading">
+            <div className="portfolio-heading" data-reveal>
               <div>
                 <p className="eyebrow">TRABALHOS DA ALANA</p>
                 <h2 className="serif section-title" id="portfolio-title">Detalhes que <em>encantam.</em></h2>
               </div>
             </div>
-            <div className="portfolio-track">
-              <figure className="portfolio-card">
+            <div className="portfolio-track" data-reveal-stagger>
+              <figure className="portfolio-card" data-reveal>
                 <div className="portfolio-photo">
-                  <Image src="/photos/trabalho-01.png" alt="Unhas decoradas em verde, amarelo e dourado" fill sizes="(max-width: 760px) 78vw, 31vw" />
+                  <Image src="/photos/trabalho-01.png" alt="Unhas decoradas em verde, amarelo e dourado" fill sizes="(max-width: 760px) 78vw, (max-width: 1040px) 46vw, 31vw" />
                 </div>
                 <figcaption>Cor e brilho em cada detalhe</figcaption>
               </figure>
-              <figure className="portfolio-card">
+              <figure className="portfolio-card" data-reveal>
                 <div className="portfolio-photo">
-                  <Image src="/photos/trabalho-02.png" alt="Unhas com francesinha verde e detalhes dourados" fill sizes="(max-width: 760px) 78vw, 31vw" />
+                  <Image src="/photos/trabalho-02.png" alt="Unhas com francesinha verde e detalhes dourados" fill sizes="(max-width: 760px) 78vw, (max-width: 1040px) 46vw, 31vw" />
                 </div>
                 <figcaption>Francesinha com toque delicado</figcaption>
               </figure>
-              <figure className="portfolio-card">
+              <figure className="portfolio-card" data-reveal>
                 <div className="portfolio-photo">
-                  <Image src="/photos/trabalho-03.png" alt="Nail art em preto e branco com pedrarias" fill sizes="(max-width: 760px) 78vw, 31vw" />
+                  <Image src="/photos/trabalho-03.png" alt="Nail art em preto e branco com pedrarias" fill sizes="(max-width: 760px) 78vw, (max-width: 1040px) 46vw, 31vw" />
                 </div>
                 <figcaption>Nail art feita à mão</figcaption>
               </figure>
@@ -245,11 +245,11 @@ export function BookingExperience() {
 
         <section className="section services-section" id="servicos">
           <div className="container">
-            <div className="section-header">
+            <div className="section-header" data-reveal>
               <div><p className="eyebrow">01 · NOSSOS CUIDADOS</p><h2 className="serif section-title">Beleza que se <em>sente.</em></h2></div>
               <p className="section-description">Escolha o cuidado que combina com você e veja os horários disponíveis.</p>
             </div>
-            <div className="service-grid">
+            <div className="service-grid" data-reveal-stagger>
               {services.map((item, index) => <ServiceCard key={item.id} item={item} number={String(index + 1).padStart(2, '0')} active={serviceId === item.id} onPick={() => { setServiceId(item.id); setTime(null); document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' }); }} />)}
             </div>
           </div>
@@ -257,7 +257,7 @@ export function BookingExperience() {
 
         <section className="about-section" id="sobre" aria-labelledby="about-title">
           <div className="container">
-            <div className="about-card">
+            <div className="about-card" data-reveal>
               <div className="about-signature-mark" aria-hidden="true"><span className="serif">A.</span><small>ALANA NAILS</small></div>
               <div className="about-copy">
                 <p className="eyebrow">UM POUCO SOBRE MIM</p>
@@ -272,16 +272,16 @@ export function BookingExperience() {
         </section>
 
         <section className="experience-section" id="experiencia">
-          <div className="container experience-grid">
-            <div className="experience-decoration"><div className="experience-diamond"><span className="serif">A</span></div><span className="exp-number">ALANA NAILS — BEAUTY STUDIO</span></div>
-            <div className="experience-text"><p className="eyebrow eyebrow-light">02 · SUA EXPERIÊNCIA</p><h2 className="serif">Seu tempo é <br /><em>precioso.</em></h2><p>Faça sua solicitação de horário com poucos toques. Sem precisar trocar mensagens para saber os horários disponíveis.</p><div className="experience-points"><span><Check size={16} /> Escolha seu serviço</span><span><Check size={16} /> Veja os horários</span><span><Check size={16} /> Solicite sua reserva</span></div></div>
+          <div className="container experience-grid" data-reveal-stagger>
+            <div className="experience-decoration" data-reveal><div className="experience-diamond"><span className="serif">A</span></div><span className="exp-number">ALANA NAILS — BEAUTY STUDIO</span></div>
+            <div className="experience-text" data-reveal><p className="eyebrow eyebrow-light">02 · SUA EXPERIÊNCIA</p><h2 className="serif">Seu tempo é <br /><em>precioso.</em></h2><p>Faça sua solicitação de horário com poucos toques. Sem precisar trocar mensagens para saber os horários disponíveis.</p><div className="experience-points"><span><Check size={16} /> Escolha seu serviço</span><span><Check size={16} /> Veja os horários</span><span><Check size={16} /> Solicite sua reserva</span></div></div>
           </div>
         </section>
 
         <section className="section booking-section" id="agendar">
           <div className="container">
-            <div className="booking-heading"><p className="eyebrow">03 · AGENDE SUA VISITA</p><h2 className="serif section-title">Seu próximo momento <em>especial.</em></h2><p>Escolha o serviço, o horário e deixe seus dados para a Alana confirmar.</p></div>
-            <div className={`booking-help ${bookingHelpOpen ? 'booking-help-open' : ''}`}>
+            <div className="booking-heading" data-reveal><p className="eyebrow">03 · AGENDE SUA VISITA</p><h2 className="serif section-title">Seu próximo momento <em>especial.</em></h2><p>Escolha o serviço, o horário e deixe seus dados para a Alana confirmar.</p></div>
+            <div className={`booking-help ${bookingHelpOpen ? 'booking-help-open' : ''}`} data-reveal>
               <button type="button" className="booking-help-trigger" aria-expanded={bookingHelpOpen} aria-controls="booking-help-content" onClick={() => setBookingHelpOpen((open) => !open)}>
                 <span><strong>Primeira vez agendando?</strong><small>Toque para ver como funciona</small></span>
                 <span className="booking-help-icon" aria-hidden="true">{bookingHelpOpen ? <Minus size={20} /> : <Plus size={20} />}</span>
@@ -297,8 +297,8 @@ export function BookingExperience() {
                 </div>
               )}
             </div>
-            <div className="booking-layout">
-              <div className="booking-form-card">
+            <div className="booking-layout" data-reveal-stagger>
+              <div className="booking-form-card" data-reveal>
                 {completed ? (
                   <div className="success-state" role="status">
                     <div className="success-icon"><CheckCircle2 size={38} /></div>
@@ -334,20 +334,20 @@ export function BookingExperience() {
                   </form>
                 )}
               </div>
-              <aside className="booking-aside"><p className="eyebrow">SUA ESCOLHA</p><h3 className="serif">Um cuidado <br/><em>exclusivo.</em></h3><div className="aside-rule" /><div className="aside-detail"><span>Serviço</span><strong>{service?.name ?? 'Escolha seu serviço'}</strong></div><div className="aside-detail"><span>Data</span><strong>{date ? dateLabel(date) : 'Selecione uma data'}</strong></div><div className="aside-detail"><span>Horário</span><strong>{time ?? 'Selecione um horário'}</strong></div><div className="aside-detail"><span>Valor</span><strong>{service ? priceBRL(service.price) : '—'}</strong></div><div className="aside-detail"><span>Sinal previsto ({settings.depositPercent}%)</span><strong>{service ? priceBRL(service.price * settings.depositPercent / 100) : '—'}</strong></div><div className="aside-rule" /><div className="aside-signature serif">Alana Nails</div><p className="aside-reminder">Cada detalhe da sua experiência importa.</p><span className="aside-sparkle">✧</span></aside>
+              <aside className="booking-aside" data-reveal><p className="eyebrow">SUA ESCOLHA</p><h3 className="serif">Um cuidado <br/><em>exclusivo.</em></h3><div className="aside-rule" /><div className="aside-detail"><span>Serviço</span><strong>{service?.name ?? 'Escolha seu serviço'}</strong></div><div className="aside-detail"><span>Data</span><strong>{date ? dateLabel(date) : 'Selecione uma data'}</strong></div><div className="aside-detail"><span>Horário</span><strong>{time ?? 'Selecione um horário'}</strong></div><div className="aside-detail"><span>Valor</span><strong>{service ? priceBRL(service.price) : '—'}</strong></div><div className="aside-detail"><span>Sinal previsto ({settings.depositPercent}%)</span><strong>{service ? priceBRL(service.price * settings.depositPercent / 100) : '—'}</strong></div><div className="aside-rule" /><div className="aside-signature serif">Alana Nails</div><p className="aside-reminder">Cada detalhe da sua experiência importa.</p><span className="aside-sparkle">✧</span></aside>
             </div>
           </div>
         </section>
       </main>
 
       <footer className="site-footer">
-        <div className="container footer-inner">
+        <div className="container footer-inner" data-reveal-stagger>
           <Brand inverse />
-          <div className="footer-location"><p>LOCAL DE ATENDIMENTO</p><strong><MapPin size={17} /> Quatis, RJ</strong></div>
-          <p>Alana Nails · Agendamentos sujeitos à confirmação.<br />Atendimento em Quatis, RJ.</p>
-          <div className="footer-links"><a href="https://www.instagram.com/alanaandrad_nails/" target="_blank" rel="noreferrer" aria-label="Abrir Instagram da Alana Nails"><Instagram size={18}/></a><Link href="/admin">Painel da Alana <ArrowRight size={14}/></Link><a href="#agendar">Voltar para agendar <ArrowLeft size={14}/></a></div>
+          <div className="footer-location" data-reveal><p>LOCAL DE ATENDIMENTO</p><strong><MapPin size={17} /> Quatis, RJ</strong></div>
+          <p data-reveal>Alana Nails · Agendamentos sujeitos à confirmação.<br />Atendimento em Quatis, RJ.</p>
+          <div className="footer-links" data-reveal><a href="https://www.instagram.com/alanaandrad_nails/" target="_blank" rel="noreferrer" aria-label="Abrir Instagram da Alana Nails"><Instagram size={18}/></a><Link href="/admin">Painel da Alana <ArrowRight size={14}/></Link><a href="#agendar">Voltar para agendar <ArrowLeft size={14}/></a></div>
         </div>
-        <div className="container footer-bottom"><span>© Alana Nails</span><span>Site desenvolvido por <a href="https://github.com/devL777" target="_blank" rel="noreferrer">devL777</a></span></div>
+        <div className="container footer-bottom" data-reveal><span>© Alana Nails</span><span>Site desenvolvido por <a href="https://github.com/devL777" target="_blank" rel="noreferrer">devL777</a></span></div>
       </footer>
     </div>
   );

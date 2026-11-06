@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Bell, CalendarDays, Check, Clock3, Inbox, Layout
 import { Booking, BookingStatus, dateLabel, priceBRL } from '@/lib/booking';
 import { deleteAdminCancelledBooking, fetchAdminBookings, fetchAdminStudioSettings, getSupabaseBrowserClient, setAdminBookingStatus } from '@/lib/supabase-browser';
 import { StudioSettingsEditor } from './StudioSettingsEditor';
+import { AdminAppControls } from './AdminAppControls';
 
 type Filter = 'todos' | 'pendente' | 'confirmado' | 'cancelado';
 const filters: { label: string; key: Filter }[] = [
@@ -112,7 +113,7 @@ export function AdminDashboard() {
 
   if (gate !== 'ready') {
     return <main className="admin-login-page">
-      <section className="admin-login-card">
+      <section className="admin-login-card" data-reveal>
         <Link href="/" className="admin-login-brand"><span className="admin-monogram serif">A.</span><span><b>ALANA</b><small>NAIL DESIGN</small></span></Link>
         <p className="eyebrow">ÁREA EXCLUSIVA</p>
         <h1 className="serif">Acesse sua <em>agenda.</em></h1>
@@ -127,6 +128,7 @@ export function AdminDashboard() {
           {gate === 'not-admin' && !loginError && <p className="settings-error">Sua conta não tem permissão para acessar este painel.</p>}
         </>}
         <Link href="/" className="admin-login-back"><ArrowLeft size={15} /> Voltar ao site</Link>
+        <AdminAppControls isAdmin={false} />
       </section>
     </main>;
   }
@@ -137,16 +139,17 @@ export function AdminDashboard() {
       <div className="admin-main">
         <header className="admin-topbar"><div className="admin-mobile-brand serif">ALANA NAILS</div><span className="admin-workspace">Área administrativa <span>/</span> {tab === 'agenda' ? 'Agenda' : 'Configurações'}</span><div className="admin-top-actions"><div className="admin-bell"><Bell size={17}/>{pending > 0 && <span className="notification-dot"/>}</div><span className="admin-avatar">A</span><button type="button" className="admin-logout" onClick={signOut} aria-label="Sair do painel"><LogOut size={17}/></button></div></header>
         <main className="admin-content">
+          <AdminAppControls isAdmin />
           <div className="admin-mobile-tabs"><button type="button" className={tab === 'agenda' ? 'selected' : ''} onClick={() => setTab('agenda')}>Agenda</button><button type="button" className={tab === 'config' ? 'selected' : ''} onClick={() => setTab('config')}>Serviços e horários</button></div>
           {dataError && <p className="settings-error" role="alert">{dataError}</p>}
           {tab === 'config' ? <StudioSettingsEditor /> : <>
-          <div className="admin-heading"><div><p className="eyebrow">PAINEL DE CONTROLE</p><h1 className="serif">Sua agenda, <em>organizada.</em></h1><p>Acompanhe clientes e horários em um só lugar.</p></div><Link href="/#agendar" className="button button-dark">Ver agendamento <ArrowRight size={16}/></Link></div>
-          <div className="admin-warning"><ShieldCheck size={18}/><p>Área privada. Os dados de contato das clientes ficam visíveis somente para a conta autorizada da Alana.</p></div>
-          <section className="admin-metrics" aria-label="Resumo da agenda"><div className="metric"><span className="metric-icon"><CalendarDays size={18}/></span><small>Total de agendamentos</small><strong>{bookings.length}</strong><span className="metric-caption">na agenda</span></div><div className="metric"><span className="metric-icon"><Clock3 size={18}/></span><small>Aguardando confirmação</small><strong>{pending}</strong><span className="metric-caption">pendentes</span></div><div className="metric"><span className="metric-icon"><Check size={18}/></span><small>Confirmados</small><strong>{confirmed}</strong><span className="metric-caption">confirmados</span></div><div className="metric"><span className="metric-icon"><X size={18}/></span><small>Cancelados</small><strong>{cancelled}</strong><span className="metric-caption">cancelados</span></div></section>
-          <section className="appointments-panel"><div className="appointments-heading"><div><h2>Agendamentos</h2><p>Veja os dados e atualize a situação de cada horário.</p></div></div><div className="filter-row">{filters.map((item) => <button key={item.key} className={`filter-button ${filter === item.key ? 'active' : ''}`} onClick={() => setFilter(item.key)} type="button">{item.label}</button>)}</div><div className="appointments-list">
-            {shown.length === 0 ? <div className="empty-dashboard"><div className="empty-icon"><Inbox size={28}/></div><h3>Nenhum agendamento por aqui.</h3><p>Quando uma cliente solicitar um horário, ele aparecerá nesta agenda.</p><Link href="/#agendar" className="admin-empty-link">Ver página de agendamento <ArrowRight size={15}/></Link></div> : shown.map((booking) => {
+          <div className="admin-heading" data-reveal><div><p className="eyebrow">PAINEL DE CONTROLE</p><h1 className="serif">Sua agenda, <em>organizada.</em></h1><p>Acompanhe clientes e horários em um só lugar.</p></div><Link href="/#agendar" className="button button-dark">Ver agendamento <ArrowRight size={16}/></Link></div>
+          <div className="admin-warning" data-reveal><ShieldCheck size={18}/><p>Área privada. Os dados de contato das clientes ficam visíveis somente para a conta autorizada da Alana.</p></div>
+          <section className="admin-metrics" aria-label="Resumo da agenda" data-reveal-stagger><div className="metric" data-reveal><span className="metric-icon"><CalendarDays size={18}/></span><small>Total de agendamentos</small><strong>{bookings.length}</strong><span className="metric-caption">na agenda</span></div><div className="metric" data-reveal><span className="metric-icon"><Clock3 size={18}/></span><small>Aguardando confirmação</small><strong>{pending}</strong><span className="metric-caption">pendentes</span></div><div className="metric" data-reveal><span className="metric-icon"><Check size={18}/></span><small>Confirmados</small><strong>{confirmed}</strong><span className="metric-caption">confirmados</span></div><div className="metric" data-reveal><span className="metric-icon"><X size={18}/></span><small>Cancelados</small><strong>{cancelled}</strong><span className="metric-caption">cancelados</span></div></section>
+          <section className="appointments-panel"><div className="appointments-heading" data-reveal><div><h2>Agendamentos</h2><p>Veja os dados e atualize a situação de cada horário.</p></div></div><div className="filter-row">{filters.map((item) => <button key={item.key} className={`filter-button ${filter === item.key ? 'active' : ''}`} onClick={() => setFilter(item.key)} type="button">{item.label}</button>)}</div><div className="appointments-list" data-reveal-stagger>
+            {shown.length === 0 ? <div className="empty-dashboard" data-reveal><div className="empty-icon"><Inbox size={28}/></div><h3>Nenhum agendamento por aqui.</h3><p>Quando uma cliente solicitar um horário, ele aparecerá nesta agenda.</p><Link href="/#agendar" className="admin-empty-link">Ver página de agendamento <ArrowRight size={15}/></Link></div> : shown.map((booking) => {
               const service = settings.services.find((item) => item.id === booking.serviceId);
-              return <article className="appointment-row" key={booking.id}>
+              return <article className="appointment-row" key={booking.id} data-reveal>
                 <div className="appointment-date"><strong>{booking.date.split('-')[2]}</strong><small>{new Date(`${booking.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
                 <div className="appointment-main"><div className="appointment-name"><strong>{booking.name}</strong><span className={`status-chip status-${booking.status}`}>{booking.status}</span></div><p>{booking.serviceName ?? service?.name ?? 'Serviço'} · {booking.time} · {booking.price != null ? priceBRL(booking.price) : service ? priceBRL(service.price) : '—'}</p><span>{dateLabel(booking.date)} · {booking.phone} · {booking.email}{booking.notes ? ` · Obs.: ${booking.notes}` : ''}</span></div>
                 <div className="appointment-actions">{booking.status !== 'confirmado' && booking.status !== 'cancelado' && <button type="button" className="action-confirm" onClick={() => updateStatus(booking.id, 'confirmado')}><Check size={15}/> Confirmar</button>}{booking.status !== 'cancelado' && <button type="button" className="action-cancel" onClick={() => updateStatus(booking.id, 'cancelado')}><X size={15}/> Cancelar</button>}{booking.status === 'cancelado' && <><button type="button" className="action-cancel" onClick={() => updateStatus(booking.id, 'pendente')}><Clock3 size={15}/> Reabrir horário</button><button type="button" className="action-delete" onClick={() => deleteCancelledBooking(booking)} aria-label={`Apagar agendamento cancelado de ${booking.name}`}><Trash2 size={15}/> Apagar</button></>}</div>
@@ -154,7 +157,7 @@ export function AdminDashboard() {
             })}
           </div></section>
           </>}
-          <p className="admin-footnote">Alterações na agenda são salvas no banco e refletem para as clientes. <Link href="/"><ArrowLeft size={14}/> Voltar ao site</Link></p>
+          <p className="admin-footnote" data-reveal>Alterações na agenda são salvas no banco e refletem para as clientes. <Link href="/"><ArrowLeft size={14}/> Voltar ao site</Link></p>
         </main>
       </div>
     </div>
