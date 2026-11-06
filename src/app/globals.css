@@ -514,3 +514,17 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 1000px) { .settings-fields { grid-template-columns: 1fr 1fr; } .settings-full { grid-column: 1/-1; } .week-editor-row { grid-template-columns: 1fr; gap: 8px; } }
 @media (max-width: 760px) { .admin-mobile-tabs { display: flex; width: 100%; gap: 0; background: #fffefa; border: 1px solid #e7dfd4; margin-bottom: 17px; } .admin-mobile-tabs button { flex: 1; padding: 15px 12px; font-size: 11px; font-weight: 800; color: #817567; } .admin-mobile-tabs button.selected { color: #342b21; border-bottom: 3px solid #ad9060; } .settings-panel { padding: 21px 16px; } .settings-panel-heading h2 { font-size: 32px; } .settings-panel-heading { align-items: start; } }
 @media (max-width: 480px) { .settings-panel-heading { flex-direction: column; } .settings-fields { grid-template-columns: 1fr 1fr; gap: 12px; } .settings-fields label:first-child, .settings-full { grid-column: 1/-1; } .week-editor-times { grid-template-columns: repeat(2,minmax(0,1fr)); } .service-editor { padding: 13px; } .service-editor-head { align-items: start; flex-direction: column; } .settings-savebar { flex-direction: column; align-items: stretch; } .settings-savebar .button { width: 100%; } }
+
+/* Interações alinhadas ao padrão Alana Nails */
+.header-cta, .button-dark, .service-card-book, .settings-add { background: #806b49; border-color: #806b49; color: #fff; }
+.header-cta:hover, .button-dark:hover, .service-card-book:hover, .settings-add:hover { background: #292522; border-color: #292522; color: #fff; }
+.service-card-toggle:hover .service-toggle-icon,
+.booking-help-trigger:hover .booking-help-icon { background: #292522; border-color: #292522; color: #fff; }
+.service-select:hover { background: #292522; border-color: #292522; color: #fff; }
+.service-select:hover .service-select-body small { color: #e9dfd0; }
+.service-select:hover .radio-dot { border-color: #fff; }
+.day-tile:hover:not(.active), .time-pill:hover:not(.active) { background: #292522; border-color: #292522; color: #fff; }
+.day-tile:hover:not(.active) small { color: #e9dfd0; }
+.admin-logout:hover, .small-ghost:hover { background: #292522; border-color: #292522; color: #fff; }
+.about-copy > p:not(.eyebrow) { margin-block: 0; text-align: justify; }
+.about-copy > .about-author { margin: 0; text-align: left; }
