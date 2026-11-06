@@ -26,11 +26,14 @@ export type StudioSettings = {
 // EXEMPLOS: não publicar nem tratar como tabela real da cliente.
 export const DEFAULT_SETTINGS: StudioSettings = {
   services: [
-    { id: 'banho-gel', name: 'Banho de gel', detail: 'Resistência e acabamento delicado', durationMinutes: null, price: 100, symbol: '01', active: true },
-    { id: 'molde-f1', name: 'Molde F1', detail: 'Alongamento com molde F1', durationMinutes: null, price: 130, symbol: '02', active: true },
-    { id: 'fibra-vidro', name: 'Fibra de vidro', detail: 'Alongamento em fibra de vidro', durationMinutes: null, price: 140, symbol: '03', active: true },
-    { id: 'esmaltacao-gel', name: 'Esmaltação em gel', detail: 'Cor e brilho com esmaltação em gel', durationMinutes: null, price: 50, symbol: '04', active: true },
-    { id: 'nail-art', name: 'Nail art', detail: 'Decoração personalizada para suas unhas', durationMinutes: null, price: 145, symbol: '05', active: true },
+    { id: 'fibra-vidro', name: 'Aplicação Fibra de vidro', detail: 'Alongamento em fibra de vidro com gel, para unhas resistentes e acabamento natural.', durationMinutes: 90, price: 145, symbol: '01', active: true },
+    { id: 'molde-f1', name: 'Aplicação Molde f1', detail: 'Alongamento com molde F1 e gel, com formato alinhado e natural.', durationMinutes: 80, price: 135, symbol: '02', active: true },
+    { id: 'banho-gel', name: 'Banho de gel', detail: 'Aplicação de gel sobre a unha natural para resistência e proteção.', durationMinutes: 60, price: 100, symbol: '03', active: true },
+    { id: 'esmaltacao-gel', name: 'Esmaltação em gel', detail: 'Esmaltação em gel sobre a unha natural, com brilho e maior durabilidade.', durationMinutes: 45, price: 50, symbol: '04', active: true },
+    { id: 'esmaltacao-gel-pe', name: 'Esmaltação em gel no pé', detail: 'Esmaltação em gel nas unhas naturais dos pés, com brilho e maior durabilidade.', durationMinutes: 40, price: 50, symbol: '05', active: true },
+    { id: 'esmaltacao-tradicional-pe', name: 'Esmaltação tradicional no pé', detail: 'Esmaltação tradicional nas unhas dos pés.', durationMinutes: 30, price: 25, symbol: '06', active: true },
+    { id: 'manutencao-fibra', name: 'Manutenção fibra de vidro', detail: 'Manutenção do alongamento em fibra de vidro.', durationMinutes: 80, price: 105, symbol: '07', active: true },
+    { id: 'manutencao-molde-f1', name: 'Manutenção molde f1', detail: 'Manutenção do alongamento com molde F1.', durationMinutes: 80, price: 100, symbol: '08', active: true },
   ],
   weekly: Array.from({ length: 7 }, (_, index) => ({
     enabled: index >= 2,
