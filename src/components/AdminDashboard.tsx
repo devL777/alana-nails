@@ -2,9 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Bell, CalendarDays, Check, Clock3, Inbox, LayoutDashboard, LogOut, Settings2, ShieldCheck, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bell, CalendarDays, Check, Clock3, Inbox, LayoutDashboard, LogOut, Settings2, ShieldCheck, Trash2, X } from 'lucide-react';
 import { Booking, BookingStatus, dateLabel, priceBRL } from '@/lib/booking';
-import { fetchAdminBookings, fetchAdminStudioSettings, getSupabaseBrowserClient, setAdminBookingStatus } from '@/lib/supabase-browser';
+import { deleteAdminCancelledBooking, fetchAdminBookings, fetchAdminStudioSettings, getSupabaseBrowserClient, setAdminBookingStatus } from '@/lib/supabase-browser';
 import { StudioSettingsEditor } from './StudioSettingsEditor';
 
 type Filter = 'todos' | 'pendente' | 'confirmado' | 'cancelado';
@@ -92,6 +92,19 @@ export function AdminDashboard() {
     }
   }
 
+  async function deleteCancelledBooking(booking: Booking) {
+    if (booking.status !== 'cancelado') return;
+    const confirmed = window.confirm('Apagar permanentemente este agendamento cancelado? O cadastro da cliente será mantido.');
+    if (!confirmed) return;
+    try {
+      await deleteAdminCancelledBooking(booking.id);
+      setBookings((current) => current.filter((item) => item.id !== booking.id));
+      setDataError('');
+    } catch {
+      setDataError('Não foi possível apagar este agendamento cancelado. Atualize a agenda e tente novamente.');
+    }
+  }
+
   const pending = bookings.filter((item) => item.status === 'pendente').length;
   const confirmed = bookings.filter((item) => item.status === 'confirmado').length;
   const cancelled = bookings.filter((item) => item.status === 'cancelado').length;
@@ -136,7 +149,7 @@ export function AdminDashboard() {
               return <article className="appointment-row" key={booking.id}>
                 <div className="appointment-date"><strong>{booking.date.split('-')[2]}</strong><small>{new Date(`${booking.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
                 <div className="appointment-main"><div className="appointment-name"><strong>{booking.name}</strong><span className={`status-chip status-${booking.status}`}>{booking.status}</span></div><p>{booking.serviceName ?? service?.name ?? 'Serviço'} · {booking.time} · {booking.price != null ? priceBRL(booking.price) : service ? priceBRL(service.price) : '—'}</p><span>{dateLabel(booking.date)} · {booking.phone} · {booking.email}{booking.notes ? ` · Obs.: ${booking.notes}` : ''}</span></div>
-                <div className="appointment-actions">{booking.status !== 'confirmado' && booking.status !== 'cancelado' && <button type="button" className="action-confirm" onClick={() => updateStatus(booking.id, 'confirmado')}><Check size={15}/> Confirmar</button>}{booking.status !== 'cancelado' && <button type="button" className="action-cancel" onClick={() => updateStatus(booking.id, 'cancelado')}><X size={15}/> Cancelar</button>}{booking.status === 'cancelado' && <button type="button" className="action-cancel" onClick={() => updateStatus(booking.id, 'pendente')}><Clock3 size={15}/> Reabrir horário</button>}</div>
+                <div className="appointment-actions">{booking.status !== 'confirmado' && booking.status !== 'cancelado' && <button type="button" className="action-confirm" onClick={() => updateStatus(booking.id, 'confirmado')}><Check size={15}/> Confirmar</button>}{booking.status !== 'cancelado' && <button type="button" className="action-cancel" onClick={() => updateStatus(booking.id, 'cancelado')}><X size={15}/> Cancelar</button>}{booking.status === 'cancelado' && <><button type="button" className="action-cancel" onClick={() => updateStatus(booking.id, 'pendente')}><Clock3 size={15}/> Reabrir horário</button><button type="button" className="action-delete" onClick={() => deleteCancelledBooking(booking)} aria-label={`Apagar agendamento cancelado de ${booking.name}`}><Trash2 size={15}/> Apagar</button></>}</div>
               </article>;
             })}
           </div></section>
