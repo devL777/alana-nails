@@ -117,7 +117,21 @@ export function BookingExperience() {
     }
   }, [date, days]);
 
-  const services = settings.services.filter((item) => item.active);
+  const serviceOrder = [
+    'Aplicação Fibra de vidro',
+    'Aplicação Molde f1',
+    'Banho de gel',
+    'Esmaltação em gel',
+    'Esmaltação em gel no pé',
+    'Esmaltação tradicional no pé',
+    'Manutenção fibra de vidro',
+    'Manutenção molde f1',
+  ];
+  const services = settings.services.filter((item) => item.active).sort((a, b) => {
+    const orderA = serviceOrder.indexOf(a.name);
+    const orderB = serviceOrder.indexOf(b.name);
+    return (orderA === -1 ? Number.MAX_SAFE_INTEGER : orderA) - (orderB === -1 ? Number.MAX_SAFE_INTEGER : orderB);
+  });
   const service = services.find((item) => item.id === serviceId) ?? null;
   const available = useMemo(() => service && date ? availableTimes(service, date, bookings, settings) : [], [service, date, bookings, settings]);
 
