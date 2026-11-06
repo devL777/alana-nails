@@ -114,6 +114,19 @@ export async function setAdminBookingStatus(id: string, status: BookingStatus): 
   if (error) throw error;
 }
 
+export async function deleteAdminCancelledBooking(id: string): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) throw new Error('A conexão com o painel ainda não está configurada.');
+  const { data, error } = await supabase.from('appointments')
+    .delete()
+    .eq('id', id)
+    .eq('status', 'cancelado')
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Somente agendamentos cancelados podem ser apagados.');
+}
+
 export async function fetchAdminStudioSettings(): Promise<StudioSettings> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) throw new Error('A conexão com o painel ainda não está configurada.');
