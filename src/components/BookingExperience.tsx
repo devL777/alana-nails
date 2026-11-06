@@ -50,7 +50,7 @@ const serviceDetails: Record<string, { image: string; alt: string; description: 
   },
 };
 
-function ServiceCard({ item, active, onPick }: { item: Service; active: boolean; onPick: () => void }) {
+function ServiceCard({ item, number, active, onPick }: { item: Service; number: string; active: boolean; onPick: () => void }) {
   const [open, setOpen] = useState(false);
   const details = serviceDetails[item.id];
 
@@ -59,7 +59,7 @@ function ServiceCard({ item, active, onPick }: { item: Service; active: boolean;
       <div className="service-card-heading">
         <button type="button" className="service-card-toggle" aria-expanded={open} aria-controls={`service-details-${item.id}`} onClick={() => setOpen((value) => !value)}>
           {details && <Image src={details.image} alt={details.alt} width={88} height={88} className="service-card-photo" sizes="88px" />}
-          <span className="service-card-title"><small className="service-card-number">{item.symbol}</small><strong className="serif">{item.name}</strong><small className="service-card-price">{priceBRL(item.price)}</small></span>
+          <span className="service-card-title"><small className="service-card-number">{number}</small><strong className="serif">{item.name}</strong><small className="service-card-price">{priceBRL(item.price)}</small></span>
           <span className="service-toggle-icon" aria-hidden="true">{open ? <Minus size={18} /> : <Plus size={18} />}</span>
         </button>
         <button type="button" className="service-card-book" onClick={onPick} aria-label={`Ir para o agendamento de ${item.name}`} title={`Agendar ${item.name}`}><ArrowRight size={18} /></button>
@@ -236,7 +236,7 @@ export function BookingExperience() {
               <p className="section-description">Escolha o cuidado que combina com você e veja os horários disponíveis.</p>
             </div>
             <div className="service-grid">
-              {services.map((item) => <ServiceCard key={item.id} item={item} active={serviceId === item.id} onPick={() => { setServiceId(item.id); setTime(null); document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' }); }} />)}
+              {services.map((item, index) => <ServiceCard key={item.id} item={item} number={String(index + 1).padStart(2, '0')} active={serviceId === item.id} onPick={() => { setServiceId(item.id); setTime(null); document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' }); }} />)}
             </div>
           </div>
         </section>
